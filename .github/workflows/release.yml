@@ -1,18 +1,16 @@
 name: Package Addon
-
 on:
   push:
     tags:
       - '**'
-
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - name: Clone Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Run BigWigs Packager
-        uses: BigWigsMods/packager@v1
+        uses: BigWigsMods/packager@v2
