@@ -1,4 +1,4 @@
-## Interface: 120005
+## Interface: 120007
 ## Title: Zone Info
 ## Notes: Displays Subzone, Zone, and Coordinates at the top of the screen.
 ## Author: Michael Stopps
@@ -11,4 +11,4 @@
 
 ## SavedVariables: ZoneInfoDB
 
-ZoneInfo.lua
+zone-info.lua
