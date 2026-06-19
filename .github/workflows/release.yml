@@ -6,6 +6,8 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Clone Repository
         uses: actions/checkout@v4
@@ -14,3 +16,5 @@ jobs:
 
       - name: Run BigWigs Packager
         uses: BigWigsMods/packager@v2
+        env:
+          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
