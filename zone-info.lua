@@ -116,7 +116,6 @@ frame:SetScript("OnDragStop", function(self)
     local point, _, _, x, y = self:GetPoint()
     ZoneInfoDB.pos = { point = point, x = x, y = y }
     
-    -- Delay clearing the drag flag slightly so OnMouseUp doesn't trigger an accidental copy
     C_Timer.After(0.05, function() self.isDragging = false end)
 end)
 
@@ -197,41 +196,67 @@ SlashCmdList["ZONEINFO"] = function(msg)
     end
 end
 
--- UPDATE LOOP
+-- ==========================================
+-- EFFICIENT UPDATE LOOP
+-- ==========================================
+local lastSettings = {}
+local lastLocStr = ""
+local lastX, lastY = -1, -1
+local cachedCoordsStr = nil
+local lastFinalText = ""
+
 C_Timer.NewTicker(0.2, function()
-    -- Only run if the database is loaded
     if not ZoneInfoDB then return end
 
-    -- Apply reactive settings
-    frame:SetScale(ZoneInfoDB.textScale or 1.0)
-    bg:SetShown(ZoneInfoDB.showBG)
+    -- 1. Apply visual settings only if they changed
+    if ZoneInfoDB.textScale ~= lastSettings.scale then
+        frame:SetScale(ZoneInfoDB.textScale or 1.0)
+        lastSettings.scale = ZoneInfoDB.textScale
+    end
+    
+    if ZoneInfoDB.showBG ~= lastSettings.bg then
+        bg:SetShown(ZoneInfoDB.showBG)
+        lastSettings.bg = ZoneInfoDB.showBG
+    end
     
     local c = ZoneInfoDB.color
-    text:SetTextColor(c.r, c.g, c.b)
+    if c.r ~= lastSettings.r or c.g ~= lastSettings.g or c.b ~= lastSettings.b then
+        text:SetTextColor(c.r, c.g, c.b)
+        lastSettings.r, lastSettings.g, lastSettings.b = c.r, c.g, c.b
+    end
 
-    -- Get Location
+    -- 2. Build Location String
     local zone = GetRealZoneText() or ""
     local subzone = GetSubZoneText() or ""
     local loc = zone == "Home Interior" and subzone or ((subzone ~= "" and subzone ~= zone) and (subzone..", "..zone) or zone)
 
-    -- Get Coords
+    -- 3. Build Coordinates String efficiently
     local mapID = C_Map.GetBestMapForUnit("player")
     local coords = nil
+    
     if mapID then
         local pos = C_Map.GetPlayerMapPosition(mapID, "player")
         if pos then
             local x, y = pos:GetXY()
-            if x < 0.001 and y < 0.001 then
-                coords = nil
+            if x >= 0.001 or y >= 0.001 then
+                -- Only format a new string if the player's position actually changed
+                if x ~= lastX or y ~= lastY then
+                    cachedCoordsStr = string.format("%.2f, %.2f", x * 100, y * 100)
+                    lastX, lastY = x, y
+                end
+                coords = cachedCoordsStr
             else
-                coords = string.format("%.2f, %.2f", x * 100, y * 100)
+                lastX, lastY = -1, -1
             end
         end
     end
-    if coords then
-        text:SetText(string.format("%s\n|cffffffff%s|r", loc, coords))
-    else
-        text:SetText(loc)
+
+    -- 4. Combine and update text only if the final result changed
+    local newText = coords and string.format("%s\n|cffffffff%s|r", loc, coords) or loc
+    
+    if newText ~= lastFinalText then
+        text:SetText(newText)
+        lastFinalText = newText
     end
 end)
 
