@@ -21,6 +21,10 @@
         "SlashCmdList",
         "Settings",
         "ReloadUI",
-        "ColorPickerFrame"
+        "ColorPickerFrame",
+        "ChatEdit_GetActiveWindow",
+        "ChatEdit_InsertLink",
+        "ChatFrame_OpenChat",
+        "UiMapPoint"
     ]
 }
