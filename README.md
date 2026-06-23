@@ -16,7 +16,7 @@ A lightweight, highly customizable World of Warcraft interface addon that displa
 
 ## Installation
 
-Download the latest release from the [Releases](#) page or use WowUp's `Install from URL` functionality for automatic updating.
+Download the latest release from the Releases page or use WowUp's `Install from URL` functionality for automatic updating.
 
 ## Usage & Configuration
 
