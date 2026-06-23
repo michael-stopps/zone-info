@@ -1,4 +1,4 @@
-# Zone-Info
+# zone-info
 
 A lightweight, highly customizable World of Warcraft interface addon that displays your current subzone, zone, and character coordinates cleanly at the top of your screen.
 
