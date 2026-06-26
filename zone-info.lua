@@ -1,23 +1,26 @@
+-- ==========================================
 -- GLOBAL VARIABLES
+-- ==========================================
+
 local frame = CreateFrame("Frame", "ZoneInfoFrame", UIParent)
 local bg = frame:CreateTexture(nil, "BACKGROUND")
 local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 
 local ZoneInfoSettings = {}
 
+-- ==========================================
 -- SETTINGS REGISTRATION
+-- ==========================================
+
 local function RegisterZoneInfoSettings()
     local category, layout = Settings.RegisterVerticalLayoutCategory("ZoneInfo")
 
-    -- Lock Position
     ZoneInfoSettings.lock = Settings.RegisterAddOnSetting(category, "ZONEINFO_LOCK", "isLocked", ZoneInfoDB, Settings.VarType.Boolean, "Lock Position", true)
     Settings.CreateCheckbox(category, ZoneInfoSettings.lock, "Prevents the frame from being moved.")
 
-    -- Show Background
     ZoneInfoSettings.bg = Settings.RegisterAddOnSetting(category, "ZONEINFO_BG", "showBG", ZoneInfoDB, Settings.VarType.Boolean, "Show Background", false)
     Settings.CreateCheckbox(category, ZoneInfoSettings.bg, "Toggles the dark background box.")
 
-    -- Scale Slider
     ZoneInfoSettings.scale = Settings.RegisterAddOnSetting(category, "ZONEINFO_SCALE", "textScale", ZoneInfoDB, Settings.VarType.Number, "Text Scale", 1.0)
     Settings.CreateSlider(category, ZoneInfoSettings.scale, Settings.CreateSliderOptions(0.5, 3.0, 0.1), "Adjust the size of the text and coordinates.")
 
@@ -27,11 +30,14 @@ end
 
 local categoryObj
 
+-- ==========================================
 -- INIT
+-- ==========================================
+
 frame:RegisterEvent("ADDON_LOADED")
 frame:SetScript("OnEvent", function(self, event, arg1)
     if event == "ADDON_LOADED" and arg1 == "zone-info" then
-        -- Initialize Database
+       
         ZoneInfoDB = ZoneInfoDB or {}
         local defaults = {
             pos = { point = "TOP", x = 0, y = -40 },
@@ -44,7 +50,6 @@ frame:SetScript("OnEvent", function(self, event, arg1)
             if ZoneInfoDB[k] == nil then ZoneInfoDB[k] = v end
         end
 
-        -- Setup UI Elements
         self:SetSize(200, 50)
         self:SetMovable(true)
         self:EnableMouse(true)
@@ -59,7 +64,6 @@ frame:SetScript("OnEvent", function(self, event, arg1)
         self:ClearAllPoints()
         self:SetPoint(p.point, p.x, p.y)
 
-        -- Register the Settings menu
         categoryObj = RegisterZoneInfoSettings()
         
         self:UnregisterEvent("ADDON_LOADED")
@@ -69,6 +73,7 @@ end)
 -- ==========================================
 -- COPY POPUP FRAME
 -- ==========================================
+
 local copyFrame = CreateFrame("Frame", "ZoneInfoCopyFrame", UIParent, "BackdropTemplate")
 copyFrame:SetSize(280, 70)
 copyFrame:SetPoint("TOP", frame, "BOTTOM", 0, -10)
@@ -102,6 +107,7 @@ end
 -- ==========================================
 -- INTERACTION & COPY LOGIC
 -- ==========================================
+
 frame.isDragging = false
 
 frame:SetScript("OnDragStart", function(self) 
@@ -119,7 +125,6 @@ frame:SetScript("OnDragStop", function(self)
     C_Timer.After(0.05, function() self.isDragging = false end)
 end)
 
--- Left Click: Copy Waypoint | Ctrl-Left Click: Link to Chat | Right Click: Color Picker
 frame:SetScript("OnMouseUp", function(self, button)
     if self.isDragging then return end
 
@@ -140,32 +145,26 @@ frame:SetScript("OnMouseUp", function(self, button)
                 local x, y = pos:GetXY()
                 if x >= 0.001 or y >= 0.001 then
                     if IsControlKeyDown() then
-                        -- Ctrl-Click: Generate Native Map Link for Chat
                         
-                        -- 1. Backup current waypoint and extended-pins DB state
                         local oldWP = C_Map.HasUserWaypoint() and C_Map.GetUserWaypoint() or nil
                         local oldPinCount = ExtendedPinsDB and #ExtendedPinsDB or 0
                         
-                        -- 2. Set temporary waypoint to force client to generate certified link
                         local pt = UiMapPoint.CreateFromCoordinates(mapID, x, y)
                         C_Map.SetUserWaypoint(pt)
                         local link = C_Map.GetUserWaypointHyperlink()
                         
-                        -- 3. Restore previous waypoint
                         if oldWP then
                             C_Map.SetUserWaypoint(oldWP)
                         else
                             C_Map.ClearUserWaypoint()
                         end
                         
-                        -- 4. Cleanup extended-pins database from hook side-effects
                         if ExtendedPinsDB then
                             while #ExtendedPinsDB > oldPinCount do
                                 table.remove(ExtendedPinsDB)
                             end
                         end
                         
-                        -- 5. Insert the certified link into the chat box automatically
                         if link then
                             if ChatEdit_GetActiveWindow() then
                                 ChatEdit_InsertLink(link)
@@ -174,7 +173,6 @@ frame:SetScript("OnMouseUp", function(self, button)
                             end
                         end
                     else
-                        -- Normal Click: Popup to copy /way command
                         local wayCommand = string.format("/way #%d %.2f %.2f", mapID, x * 100, y * 100)
                         ShowCopyPopup(wayCommand)
                     end
@@ -184,7 +182,10 @@ frame:SetScript("OnMouseUp", function(self, button)
     end
 end)
 
+-- ==========================================
 -- SLASH COMMAND
+-- ==========================================
+
 SLASH_ZONEINFO1 = "/zi"
 SLASH_ZONEINFO2 = "/zoneinfo"
 SlashCmdList["ZONEINFO"] = function(msg)
@@ -197,8 +198,9 @@ SlashCmdList["ZONEINFO"] = function(msg)
 end
 
 -- ==========================================
--- EFFICIENT UPDATE LOOP
+-- UPDATE LOOP
 -- ==========================================
+
 local lastSettings = {}
 local lastLocStr = ""
 local lastX, lastY = -1, -1
@@ -208,7 +210,6 @@ local lastFinalText = ""
 C_Timer.NewTicker(0.2, function()
     if not ZoneInfoDB then return end
 
-    -- 1. Apply visual settings only if they changed
     if ZoneInfoDB.textScale ~= lastSettings.scale then
         frame:SetScale(ZoneInfoDB.textScale or 1.0)
         lastSettings.scale = ZoneInfoDB.textScale
@@ -225,12 +226,10 @@ C_Timer.NewTicker(0.2, function()
         lastSettings.r, lastSettings.g, lastSettings.b = c.r, c.g, c.b
     end
 
-    -- 2. Build Location String
     local zone = GetRealZoneText() or ""
     local subzone = GetSubZoneText() or ""
     local loc = zone == "Home Interior" and subzone or ((subzone ~= "" and subzone ~= zone) and (subzone..", "..zone) or zone)
 
-    -- 3. Build Coordinates String efficiently
     local mapID = C_Map.GetBestMapForUnit("player")
     local coords = nil
     
@@ -239,7 +238,6 @@ C_Timer.NewTicker(0.2, function()
         if pos then
             local x, y = pos:GetXY()
             if x >= 0.001 or y >= 0.001 then
-                -- Only format a new string if the player's position actually changed
                 if x ~= lastX or y ~= lastY then
                     cachedCoordsStr = string.format("%.2f, %.2f", x * 100, y * 100)
                     lastX, lastY = x, y
@@ -251,7 +249,6 @@ C_Timer.NewTicker(0.2, function()
         end
     end
 
-    -- 4. Combine and update text only if the final result changed
     local newText = coords and string.format("%s\n|cffffffff%s|r", loc, coords) or loc
     
     if newText ~= lastFinalText then
