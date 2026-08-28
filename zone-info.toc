@@ -1,8 +1,8 @@
-## Interface: 120007
+## Interface: 120100
 ## Title: Zone Info
 ## Notes: Displays Subzone, Zone, and Coordinates at the top of the screen.
 ## Author: Michael Stopps
-## Version: 12.0.7.4
+## Version: 12.1.0.1
 ## Category: Map
 
 ## IconTexture: Interface\Icons\inv_10_dungeonjewelry_explorer_trinket_1compass_color1
