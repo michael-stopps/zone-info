@@ -27,3 +27,7 @@ To access the configuration menu, type either of the following slash commands in
 * `/zoneinfo`
 
 From the menu, you can adjust scaling, lock or unlock the frame, and manage background visibility.
+
+## Versioning
+
+Version numbers follow the WoW patch they were built for, plus an addon revision: `<patch>.<revision>` — e.g. `12.1.0.1` is the first release for patch 12.1.0. The revision resets to `1` on each new patch. Git tags use the same string.
