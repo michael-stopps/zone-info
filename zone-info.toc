@@ -1,4 +1,4 @@
-## Interface: 120100
+## Interface: 120105
 ## Title: Zone Info
 ## Notes: Displays Subzone, Zone, and Coordinates at the top of the screen.
 ## Author: Michael Stopps
